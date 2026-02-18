@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.LocalDateTime;
+import java.util.concurrent.ExecutionException;
 
 @RestControllerAdvice
 public class KafkaControllerAdvice {
@@ -25,5 +26,31 @@ public class KafkaControllerAdvice {
         );
 
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(ExecutionException.class)
+    public ResponseEntity<ErrorResponse> handleExecutionException(ExecutionException ex, HttpServletRequest request){
+        ErrorResponse error = new ErrorResponse(
+                LocalDateTime.now(),
+                HttpStatus.REQUEST_TIMEOUT.value(),
+                HttpStatus.REQUEST_TIMEOUT.getReasonPhrase(),
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+
+        return new ResponseEntity<>(error, HttpStatus.REQUEST_TIMEOUT);
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<ErrorResponse> handleExecutionException(RuntimeException ex, HttpServletRequest request){
+        ErrorResponse error = new ErrorResponse(
+                LocalDateTime.now(),
+                HttpStatus.REQUEST_TIMEOUT.value(),
+                HttpStatus.REQUEST_TIMEOUT.getReasonPhrase(),
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+
+        return new ResponseEntity<>(error, HttpStatus.REQUEST_TIMEOUT);
     }
 }

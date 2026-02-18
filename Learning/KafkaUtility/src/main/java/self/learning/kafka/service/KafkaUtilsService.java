@@ -27,7 +27,7 @@ public class KafkaUtilsService {
                     .names()
                     .get();
         } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
+            e.getMessage();
         }
         return null;
     }
@@ -70,7 +70,7 @@ public class KafkaUtilsService {
         }
     }
 
-    public Map<String, TopicDescription> isTopicExist(String topic) {
+    public List<String> isTopicExist(String topic) {
         try {
             ListTopicsOptions options = new ListTopicsOptions();
             options.listInternal(false); // ignore __consumer_offsets
@@ -80,23 +80,12 @@ public class KafkaUtilsService {
                     .get();
 
             if(names.contains(topic))
-                return describeTopics(List.of(topic));
+                return List.of(topic);
 
         } catch (Exception e) {
             throw new RuntimeException("Failed to check topic existence", e);
         }
-        return new HashMap<String, TopicDescription>();
-    }
-
-    public Set<String> listAllTopics() {
-        try {
-            return adminClient.listTopics()
-                    .names()
-                    .get();
-
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to fetch topics", e);
-        }
+        return null;
     }
 
     public Map<String, TopicDescription> describeTopics(List<String> topics) {
@@ -106,6 +95,21 @@ public class KafkaUtilsService {
         } catch (Exception e) {
             throw new RuntimeException("Failed to describe topics", e);
         }
+    }
+
+    public void deleteTopic(Set<String> topicList) {
+        topicList.forEach(topicName ->{
+            DeleteTopicsResult result =
+                    adminClient.deleteTopics(Collections.singletonList(topicName));
+            // Wait for operation to complete
+            try {
+                result.all().get();
+            } catch (InterruptedException | ExecutionException e) {
+                throw new RuntimeException(e);
+            }
+
+            log.info("Topic '{}' deleted successfully", topicName);
+        });
     }
 
 //    public KafkaMetadata update(KafkaMetadata kafkaMetadata) {

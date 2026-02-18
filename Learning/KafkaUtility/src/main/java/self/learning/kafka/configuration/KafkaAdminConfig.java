@@ -13,10 +13,18 @@ public class KafkaAdminConfig {
     @Value("${kafka.bootstrap.server}")
     private String bootstrapServers;
 
+    @Value("${kafka.request.timeout}")
+    private String requestTimeout;
+
+    @Value("${kafka.retries}")
+    private String retries;
+
     @Bean
     public AdminClient adminClient() {
         Properties props = new Properties();
         props.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        props.put(AdminClientConfig.REQUEST_TIMEOUT_MS_CONFIG, requestTimeout);
+        props.put(AdminClientConfig.RETRIES_CONFIG, retries);
         return AdminClient.create(props);
     }
 }

@@ -1,17 +1,18 @@
 package self.learning.kafka.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
-import self.learning.kafka.configuration.KafkaAdminConfig;
 import self.learning.kafka.dto.KafkaMetadata;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 @Service
+@Slf4j
 public class KafkaUtilsService {
 
     @Autowired
@@ -20,15 +21,20 @@ public class KafkaUtilsService {
     @Autowired
     private AdminClient adminClient;
 
-    public String getTopicList(){
-        return kafkaTemplate.getKafkaAdmin().clusterId();
-//        return kafkaTemplate.getDefaultTopic();
+    public Set<String> getTopicList() {
+        try {
+            return adminClient.listTopics()
+                    .names()
+                    .get();
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
-    public void createTopic(KafkaMetadata kafkaMetadata) {
-
+    public KafkaMetadata createTopic(KafkaMetadata kafkaMetadata) {
+        KafkaMetadata updatedMetadata = null;
         try {
-
             // Define topic
             NewTopic newTopic = new NewTopic(
                     kafkaMetadata.topic(),
@@ -48,7 +54,17 @@ public class KafkaUtilsService {
             // Wait for result
             result.all().get();
 
-            System.out.println("✅ Topic created successfully: " + kafkaMetadata.topic());
+            log.info("✅ Topic created successfully: {}", kafkaMetadata.topic());
+            updatedMetadata = new KafkaMetadata(
+                    kafkaMetadata.topic(),
+                    kafkaMetadata.partition(),
+                    kafkaMetadata.headers(),
+                    kafkaMetadata.replificationFactor(),
+                    kafkaMetadata.retention(),
+                    LocalDateTime.now()
+            );
+            return updatedMetadata;
+
         } catch (ExecutionException | InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -92,4 +108,8 @@ public class KafkaUtilsService {
         }
     }
 
+//    public KafkaMetadata update(KafkaMetadata kafkaMetadata) {
+//        KafkaMetadata updateKafkaMetadata = null;
+//        return n
+//    }
 }

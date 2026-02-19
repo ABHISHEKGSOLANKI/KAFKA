@@ -2,6 +2,7 @@ package self.learning.kafka.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.*;
+import org.apache.kafka.common.Node;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
@@ -10,6 +11,8 @@ import self.learning.kafka.dto.KafkaMetadata;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @Service
 @Slf4j
@@ -110,6 +113,37 @@ public class KafkaUtilsService {
 
             log.info("Topic '{}' deleted successfully", topicName);
         });
+    }
+
+    public void getKafkaBrokers() {
+        DescribeClusterResult cluster = adminClient.describeCluster();
+
+        // Get all brokers registered in cluster metadata
+        Collection<Node> nodes = null;
+        try {
+            nodes = cluster.nodes().get(5, TimeUnit.SECONDS);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            throw new RuntimeException(e);
+        }
+
+        log.info("==== Kafka Brokers in Cluster ====");
+
+        for (Node node : nodes) {
+            log.info(
+                    "Broker ID: " + node.id() +
+                            " | Host: " + node.host() +
+                            " | Port: " + node.port() +
+                            " | Rack: " + node.rack()
+            );
+        }
+
+        log.info("\n==== ACTIVE Brokers ====");
+
+        // If node is returned here → it is ACTIVE
+        nodes.forEach(node ->
+                log.info("ACTIVE → " + node.host() + ":" + node.port())
+        );
+
     }
 
 //    public KafkaMetadata update(KafkaMetadata kafkaMetadata) {

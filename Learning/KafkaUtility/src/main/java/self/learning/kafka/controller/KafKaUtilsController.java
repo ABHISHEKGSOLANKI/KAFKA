@@ -62,4 +62,10 @@ public class KafKaUtilsController {
         List<String> topicExist = kafkaUtilsService.isTopicExist(topicname);
         return new ResponseEntity<>(topicExist, HttpStatus.OK);
     }
+
+    @GetMapping("/brokers")
+    public ResponseEntity<?> kafkaBrokers(){
+        kafkaUtilsService.getKafkaBrokers();
+        return ResponseEntity.ok("OK");
+    }
 }
